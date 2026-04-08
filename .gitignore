@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.mat
+runs/
+best_model.pth
+emgnet.onnx
+emgnet.onnx.data
