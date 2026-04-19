@@ -9,13 +9,13 @@ TEST_REPS         = [2, 5]
 PURITY_THRESHOLD  = 0.9       # min fraction of window that must agree on label
 
 # Training parameters 
-BATCH_SIZE        = 32
-LEARNING_RATE = 0.0003
-NUM_EPOCHS = 60
+BATCH_SIZE        = 64
+LEARNING_RATE = 0.001
+NUM_EPOCHS = 50
 DROPOUT = 0.1
 
 # Dataset parameters
 NUM_CLASSES       = 18        # 0=rest, 1-17=movements
-NUM_CHANNELS      = 12        # EMG electrodes
+NUM_CHANNELS      = 48       # EMG electrodes + acc ( 12 + 36) respectively
 
 

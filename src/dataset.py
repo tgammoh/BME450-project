@@ -37,4 +37,4 @@ def create_dataloaders(X_train, y_train, X_test, y_test, batch_size):
     print(f'Train batches: {len(train_loader)}')
     print(f'Test batches:  {len(test_loader)}')
 
-    return train_loader, test_loader
+    return train_loader, test_loader    

@@ -1,16 +1,32 @@
 import torch
 import torch.nn as nn
-from config import NUM_CLASSES, NUM_CHANNELS, WINDOW_SIZE
+from config import NUM_CLASSES, NUM_CHANNELS, WINDOW_SIZE, DROPOUT
+
+
+class ChannelAttention(nn.Module):
+    def __init__(self, channels, reduction=4):
+        super().__init__()
+        self.attention = nn.Sequential(
+            nn.AdaptiveAvgPool1d(1),
+            nn.Flatten(),
+            nn.Linear(channels, channels // reduction),
+            nn.ReLU(),
+            nn.Linear(channels // reduction, channels),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        weights = self.attention(x)
+        weights = weights.unsqueeze(2)
+        return x * weights
 
 
 class EMGNetV2(nn.Module):
 
-    def __init__(self, dropout=0.3):
+    def __init__(self, dropout=DROPOUT):
         super(EMGNetV2, self).__init__()
 
         # ── spatial conv ──────────────────────────────────
-        # kernel size 1 = looks across channels at each time step
-        # learns which channel combinations fire together
         self.spatial_conv = nn.Sequential(
             nn.Conv1d(NUM_CHANNELS, 32, kernel_size=1),
             nn.BatchNorm1d(32),
@@ -19,7 +35,6 @@ class EMGNetV2(nn.Module):
         )
 
         # ── multi-scale temporal convs ────────────────────
-        # three parallel branches, each a different timescale
         self.temporal_small = nn.Sequential(
             nn.Conv1d(32, 64, kernel_size=3, padding=1),
             nn.BatchNorm1d(64),
@@ -36,8 +51,7 @@ class EMGNetV2(nn.Module):
             nn.ReLU()
         )
 
-        # ── merge multi-scale ─────────────────────────────
-        # 3 branches × 64 filters = 192 channels concatenated
+        # ── merge ─────────────────────────────────────────
         self.merge = nn.Sequential(
             nn.Conv1d(192, 128, kernel_size=3, padding=1),
             nn.BatchNorm1d(128),
@@ -45,41 +59,50 @@ class EMGNetV2(nn.Module):
             nn.Dropout(p=dropout)
         )
 
-        # ── attention pooling ─────────────────────────────
-        # learns which time steps matter most
+        # ── channel attention ─────────────────────────────
+        self.channel_attention = ChannelAttention(128, reduction=4)
+
+        # ── temporal attention pooling ────────────────────
         self.attention = nn.Sequential(
             nn.Conv1d(128, 1, kernel_size=1),
             nn.Softmax(dim=2)
         )
 
-        # ── classifier ────────────────────────────────────
+        # ── classifier head ───────────────────────────────
         self.dropout = nn.Dropout(p=dropout)
-        self.fc      = nn.Linear(128, NUM_CLASSES)
+        self.fc1     = nn.Linear(128, 64)
+        self.relu    = nn.ReLU()
+        self.fc2     = nn.Linear(64, NUM_CLASSES)
 
     def forward(self, x):
-        x = x.permute(0, 2, 1)           # [batch, 12,  200]
+        x = x.permute(0, 2, 1)               # [batch, 12,  200]
 
-        # spatial: cross-channel relationships
-        x = self.spatial_conv(x)          # [batch, 32,  200]
+        # spatial
+        x = self.spatial_conv(x)              # [batch, 32,  200]
 
-        # multi-scale: three parallel branches
-        x_small = self.temporal_small(x)  # [batch, 64,  200]
-        x_med   = self.temporal_med(x)    # [batch, 64,  200]
-        x_large = self.temporal_large(x)  # [batch, 64,  200]
+        # multi-scale parallel branches
+        x_small = self.temporal_small(x)      # [batch, 64,  200]
+        x_med   = self.temporal_med(x)        # [batch, 64,  200]
+        x_large = self.temporal_large(x)      # [batch, 64,  200]
 
-        # concatenate all three scales
+        # concatenate
         x = torch.cat([x_small, x_med, x_large], dim=1)  # [batch, 192, 200]
 
-        # merge and compress
-        x = self.merge(x)                 # [batch, 128, 200]
+        # merge
+        x = self.merge(x)                     # [batch, 128, 200]
 
-        # attention pooling: weighted sum across time
-        weights = self.attention(x)       # [batch, 1,   200]
-        x = (x * weights).sum(dim=2)     # [batch, 128]
+        # channel attention: which channels matter most
+        x = self.channel_attention(x)         # [batch, 128, 200]
+
+        # temporal attention: which time steps matter most
+        weights = self.attention(x)           # [batch, 1,   200]
+        x = (x * weights).sum(dim=2)         # [batch, 128]
 
         # classify
         x = self.dropout(x)
-        x = self.fc(x)                    # [batch, 18]
+        x = self.fc1(x)                       # [batch, 64]
+        x = self.relu(x)
+        x = self.fc2(x)                       # [batch, 18]
 
         return x
 
@@ -92,6 +115,5 @@ if __name__ == '__main__':
     output = model(dummy)
     print(f'Input shape:  {dummy.shape}')
     print(f'Output shape: {output.shape}')
-    print(f'\nParameter count:')
     total = sum(p.numel() for p in model.parameters())
-    print(f'  total: {total:,}')
+    print(f'Total parameters: {total:,}')

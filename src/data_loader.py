@@ -47,6 +47,7 @@ class NinaProLoader:
             raise ValueError('Data not loaded. Please call load_mat_file() first.')
 
         self.emg = self.data.get('emg')                    # main input  [samples x 12]
+        self.acc = self.data.get('acc') 
 
         restimulus = self.data.get('restimulus')           # ground truth labels (corrected timing)
 
@@ -58,6 +59,8 @@ class NinaProLoader:
             print('RESTIMULUS empty --> falling back to STIMULUS.')
 
         self.repetition = self.data.get('repetition')      # for train/test split only
+
+   
 
     def print_summary(self):
         if self.emg is None:
@@ -74,6 +77,9 @@ class NinaProLoader:
         print(f'Window size:       {self.window_size} samples ({self.window_size / 2000 * 1000:.0f}ms at 2000Hz)')
         print(f'Step size:         {self.step_size} samples  ({self.step_size / 2000 * 1000:.0f}ms)')
         print('===========================\n')
+
+
+       
 
     def normalise(self, train_reps):
         if self.emg is None:
@@ -92,7 +98,16 @@ class NinaProLoader:
         # then we apply to the entire signal (train + test)
         self.emg = (self.emg - self.emg_mean) / (self.emg_std + 1e-8)   # shape: [time_samples x 12]
 
+        train_acc      = self.acc[train_mask]
+        self.acc_mean  = train_acc.mean(axis=0)
+        self.acc_std   = train_acc.std(axis=0)
+        self.acc       = (self.acc - self.acc_mean) / (self.acc_std + 1e-8)
+
         print('Data normalised using training repetitions only.\n')
+
+        self.acc = self.data.get('acc')
+        print(f'EMG shape: {self.emg.shape}')
+        print(f'ACC shape: {self.acc.shape}')
         # we only use the data of the train to calculate specs because we want to treat the test sample as if its in real time.
         
 
@@ -132,7 +147,9 @@ class NinaProLoader:
 
 
             # extract the window
-            emg_window = self.emg[start:end]
+            emg_window = self.emg[start:end]     # [200 × 12]
+            acc_window = self.acc[start:end]           # [200 × 3]
+            window     = np.concatenate([emg_window, acc_window], axis=1)  # [200 × 15]
             label_window = labels_flat[start:end]
             
 
@@ -147,10 +164,10 @@ class NinaProLoader:
             
 
             if centre_rep in train_reps:
-                X_train.append(emg_window)
+                X_train.append(window)
                 Y_train.append(majority_label)
             else:
-                X_test.append(emg_window)
+                X_test.append(window)
                 Y_test.append(majority_label)
 
         X_train = np.array(X_train)
@@ -178,6 +195,41 @@ class NinaProLoader:
         return class_weights
 
 
+def load_multiple_subjects(file_paths, train_reps=TRAIN_REPS, purity_threshold=PURITY_THRESHOLD):
+
+    all_X_train, all_y_train = [], []
+
+    for file_path in file_paths:
+        print(f'\n--- Loading {os.path.basename(file_path)} ---')
+        loader = NinaProLoader(file_path)
+        loader.load_mat_file()
+        loader.extract_variables()
+        loader.normalise(train_reps=train_reps)
+
+        X_train, y_train, X_test, y_test = loader.create_windows(
+            train_reps=train_reps,
+            purity_threshold=purity_threshold
+        )
+
+        all_X_train.append(X_train)
+        all_y_train.append(y_train)
+
+        # only keep test set from the first subject
+        if file_path == file_paths[0]:
+            X_test_final = X_test
+            y_test_final = y_test
+
+    X_train = np.concatenate(all_X_train, axis=0)
+    y_train = np.concatenate(all_y_train, axis=0)
+
+    print(f'\n--- Combined dataset ---')
+    print(f'X_train: {X_train.shape}  (from all subjects)')
+    print(f'X_test:  {X_test_final.shape}  (from subject 1 only)')
+
+    return X_train, y_train, X_test_final, y_test_final
+
+
+
 """
 I found that there is a majority class problem in the dataset,
 where the rest class dominates the windows by a large margin.
@@ -202,6 +254,8 @@ if __name__ == '__main__':
     from dataset import create_dataloaders
     
     file_path = os.path.join('..', 'data', 'S1_E1_A1.mat')
+
+
 
     loader = NinaProLoader(file_path, window_size=WINDOW_SIZE, step_size=STEP_SIZE)
     loader.load_mat_file()
