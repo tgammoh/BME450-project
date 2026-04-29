@@ -20,7 +20,7 @@ applications in prosthetic control, human–machine interfaces, and rehabilitati
 
 ## Dataset
 
-The project uses **NinaPro DB2,+ DB3** — a publicly available surface EMG dataset designed for prosthetic research.
+The project uses **NinaPro DB2,+ DB3** link: https://ninapro.hevs.ch/
 
 | Property | Value |
 |---|---|
