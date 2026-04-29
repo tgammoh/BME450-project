@@ -84,10 +84,7 @@ tensorboard --logdir src/runs/
 
 Opens an interactive dashboard showing loss and accuracy curves over epochs.
 
----
 
-
----
 
 ## References
 
