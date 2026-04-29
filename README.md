@@ -88,6 +88,8 @@ tensorboard --logdir src/runs/
 
 Opens an interactive dashboard showing loss and accuracy curves over epochs.
 
+### Model switch
+To switch between models look for commented out code in train.py and change binary value in test_subjects.py
 
 
 ## References
