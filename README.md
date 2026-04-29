@@ -86,12 +86,6 @@ Opens an interactive dashboard showing loss and accuracy curves over epochs.
 
 ---
 
-## Future work
-
-- **More training subjects** — NinaPro DB2 has 40 subjects total; using more of them should force the model to learn universal features instead of memorising individuals.
-- **Transfer learning + per-user fine-tuning** — pre-train on a large subject pool, then adapt with 1-2 repetitions from each new user (how commercial prosthetics actually work).
-- **Real-time hardware integration** — couple this classifier to a physical sensor array and motor system for a functional prosthetic demo.
-- **Interactive deployment as a web app** — package the model into a Streamlit app for easier demonstration and sharing.
 
 ---
 
