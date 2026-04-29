@@ -37,17 +37,12 @@ The accelerometer data comes from 12 Delsys Trigno sensors, each with a 3-axis a
 
 
 
-## Usage
-```bash
+## Results
+
 results of train.py --> best_model.pth   results of test_subjects.py --> batch_results.txt
-```
 
-
-### Install dependencies
-
-```bash
-pip install torch numpy scipy scikit-learn matplotlib tensorboard
-```
+### Model switch
+To switch between models look for commented out code in train.py and change binary value in test_subjects.py
 
 ### Train the model
 
@@ -56,9 +51,7 @@ cd src
 python3 train.py
 ```
 
-Trains on 5 subjects, saves the best checkpoint to `best_model.pth`, and logs to TensorBoard.
-
-
+Trains on 7 subjects, saves the best checkpoint to `best_model.pth`, and logs to TensorBoard.
 
 ### Evaluate on unseen subjects and trained subjects
 
@@ -80,6 +73,13 @@ Interactive demo that:
 - shows confidence bars across all 18 classes
 - reports running accuracy
 
+### Install dependencies
+
+```bash
+pip install torch numpy scipy scikit-learn matplotlib tensorboard
+```
+For hand_visualiser.py
+
 ### View training curves
 
 ```bash
@@ -88,8 +88,6 @@ tensorboard --logdir src/runs/
 
 Opens an interactive dashboard showing loss and accuracy curves over epochs.
 
-### Model switch
-To switch between models look for commented out code in train.py and change binary value in test_subjects.py
 
 
 ## References
