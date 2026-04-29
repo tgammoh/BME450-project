@@ -28,8 +28,8 @@ The project uses **NinaPro DB2,+ DB3** link: https://ninapro.hevs.ch/
 | Sampling rate | 2000 Hz |
 | Number of gestures | 18 (0 = rest, 1-17 = different hand/wrist movements) |
 | Repetitions per gesture | 6 (4 used for training, 2 for testing) |
-| Training subjects | 5 able-bodied subjects (S1, S2, S3, S5, S6, S11(amputee), S1(amputee)) |
-| Test subjects | held-out reps of S1, plus unseen subjects for cross-subject evaluation |
+| Training subjects | 7 able-bodied subjects (S1, S2, S3, S5, S6, S11(amputee), S1(amputee)) |
+| Test subjects | seen + some unseen subjects for cross-subject evaluation |
 | Window size | 200 samples (100 ms) |
 | Window step | 50 samples (25 ms) |
 
