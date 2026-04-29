@@ -38,6 +38,10 @@ The accelerometer data comes from 12 Delsys Trigno sensors, each with a 3-axis a
 
 
 ## Usage
+```bash
+results of train.py --> best_model.pth   results of test_subjects.py --> batch_results.txt
+```
+
 
 ### Install dependencies
 
