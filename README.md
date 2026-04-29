@@ -39,7 +39,8 @@ The accelerometer data comes from 12 Delsys Trigno sensors, each with a 3-axis a
 
 ## Results
 
-results of train.py --> best_model.pth   results of test_subjects.py --> batch_results.txt
+results of train.py --> best_model.pth   
+results of test_subjects.py --> batch_results.txt
 
 ### Model switch
 To switch between models look for commented out code in train.py and change binary value in test_subjects.py
