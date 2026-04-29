@@ -20,6 +20,15 @@ from config import (
 )
 
 
+"""HEADS UP: I had to run the test accuracy only on one subject becaue the RAM did not have enough space to 
+allow we to find test accuracies on each subject during training, so I made test_subjects.py that runs the model 
+against all the subjects ( both train and test data) to see the general results of my model."""
+
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f'Using device: {device}')
+
+
 writer = SummaryWriter(log_dir='runs/emgnet_5subjects')
 
 
@@ -30,6 +39,8 @@ file_paths = [
     os.path.join('..', 'data', 'S3_E1_A1.mat'),
     os.path.join('..', 'data', 'S6_E1_A1.mat'),
     os.path.join('..', 'data', 'S5_E1_A1.mat'),
+    os.path.join('..', 'data', 'S11_E1_A2.mat'),
+    os.path.join('..', 'data', 'S1_E1_A2.mat'),
 ]
 
 X_train, y_train, X_test, y_test = load_multiple_subjects(
@@ -46,15 +57,15 @@ train_loader, test_loader = create_dataloaders(
 
 # recompute class weights on combined data
 loader = NinaProLoader(file_paths[0])
-class_weights = loader.compute_class_weights(y_train, NUM_CLASSES)
+class_weights = loader.compute_class_weights(y_train, NUM_CLASSES).to(device)
 
 
 
-#model = EMGNet()
-model = EMGNetV2()
+model = EMGNet().to(device)
+#model = EMGNetV2().to(device)
 print(model)
 
-dummy_input = torch.randn(1, WINDOW_SIZE, NUM_CHANNELS)
+dummy_input = torch.randn(1, WINDOW_SIZE, NUM_CHANNELS).to(device)
 writer.add_graph(model, dummy_input)
 
 
@@ -69,6 +80,7 @@ def train_one_epoch(model, loader, criterion, optimizer):
     total_samples = 0
 
     for X_batch, y_batch in loader:
+        X_batch, y_batch = X_batch.to(device), y_batch.to(device)
         predictions = model(X_batch)
         loss        = criterion(predictions, y_batch)
 
@@ -91,6 +103,7 @@ def evaluate(model, loader, criterion):
 
     with torch.no_grad():
         for X_batch, y_batch in loader:
+            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
             predictions = model(X_batch)
             loss        = criterion(predictions, y_batch)
 
@@ -110,6 +123,7 @@ def evaluate_detailed(model, loader, criterion, num_classes):
 
     with torch.no_grad():
         for X_batch, y_batch in loader:
+            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
             predictions = model(X_batch)
             loss = criterion(predictions, y_batch)
             predicted = predictions.argmax(dim=1)
@@ -117,10 +131,13 @@ def evaluate_detailed(model, loader, criterion, num_classes):
             total_loss += loss.item() * len(y_batch)
             total_samples += len(y_batch)
 
+            y_cpu = y_batch.cpu()
+            pred_cpu = predicted.cpu()
+
             for cls in range(num_classes):
-                mask = y_batch == cls
+                mask = y_cpu == cls
                 per_class_total[cls] += mask.sum().item()
-                per_class_correct[cls] += ((predicted == y_batch) & mask).sum().item()
+                per_class_correct[cls] += ((pred_cpu == y_cpu) & mask).sum().item()
 
     print('\n=== Per-class accuracy ===')
     for cls in range(num_classes):
@@ -143,6 +160,7 @@ print(f'{"epoch":>6}  {"train loss":>10}  {"train acc":>10}  {"test loss":>10}  
 print('-' * 56)
 
 best_test_acc = 0.0
+
 
 
 for epoch in range(1, NUM_EPOCHS + 1):

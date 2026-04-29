@@ -27,12 +27,12 @@ class EMGNet(nn.Module):
         self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
         self.bn2 = nn.BatchNorm1d(64)
         self.relu2 = nn.ReLU()
-        #self.drop2 = nn.Dropout(p=DROPOUT)
+      
 
         self.conv3 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
         self.bn3 = nn.BatchNorm1d(128)
         self.relu3 = nn.ReLU()
-        #self.drop3 = nn.Dropout(p=DROPOUT)
+      
 
 
         
@@ -87,6 +87,5 @@ if __name__ == '__main__':
     print(f'\nInput shape:  {dummy.shape}')
     print(f'Output shape: {output.shape}')   
 
-    # export for Netron visualisation
     torch.onnx.export(model, dummy, 'emgnet.onnx')
     print('Model exported to emgnet.onnx')

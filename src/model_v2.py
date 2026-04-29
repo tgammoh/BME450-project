@@ -26,7 +26,6 @@ class EMGNetV2(nn.Module):
     def __init__(self, dropout=DROPOUT):
         super(EMGNetV2, self).__init__()
 
-        # ── spatial conv ──────────────────────────────────
         self.spatial_conv = nn.Sequential(
             nn.Conv1d(NUM_CHANNELS, 32, kernel_size=1),
             nn.BatchNorm1d(32),
@@ -34,7 +33,6 @@ class EMGNetV2(nn.Module):
             nn.Dropout(p=dropout)
         )
 
-        # ── multi-scale temporal convs ────────────────────
         self.temporal_small = nn.Sequential(
             nn.Conv1d(32, 64, kernel_size=3, padding=1),
             nn.BatchNorm1d(64),
@@ -51,7 +49,7 @@ class EMGNetV2(nn.Module):
             nn.ReLU()
         )
 
-        # ── merge ─────────────────────────────────────────
+      
         self.merge = nn.Sequential(
             nn.Conv1d(192, 128, kernel_size=3, padding=1),
             nn.BatchNorm1d(128),
@@ -59,50 +57,48 @@ class EMGNetV2(nn.Module):
             nn.Dropout(p=dropout)
         )
 
-        # ── channel attention ─────────────────────────────
         self.channel_attention = ChannelAttention(128, reduction=4)
 
-        # ── temporal attention pooling ────────────────────
+   
         self.attention = nn.Sequential(
             nn.Conv1d(128, 1, kernel_size=1),
             nn.Softmax(dim=2)
         )
 
-        # ── classifier head ───────────────────────────────
+     
         self.dropout = nn.Dropout(p=dropout)
         self.fc1     = nn.Linear(128, 64)
         self.relu    = nn.ReLU()
         self.fc2     = nn.Linear(64, NUM_CLASSES)
 
     def forward(self, x):
-        x = x.permute(0, 2, 1)               # [batch, 12,  200]
-
+        x = x.permute(0, 2, 1)            
         # spatial
-        x = self.spatial_conv(x)              # [batch, 32,  200]
+        x = self.spatial_conv(x)              
 
         # multi-scale parallel branches
-        x_small = self.temporal_small(x)      # [batch, 64,  200]
-        x_med   = self.temporal_med(x)        # [batch, 64,  200]
-        x_large = self.temporal_large(x)      # [batch, 64,  200]
+        x_small = self.temporal_small(x)     
+        x_med   = self.temporal_med(x)    
+        x_large = self.temporal_large(x)   
 
         # concatenate
-        x = torch.cat([x_small, x_med, x_large], dim=1)  # [batch, 192, 200]
+        x = torch.cat([x_small, x_med, x_large], dim=1)  
 
         # merge
-        x = self.merge(x)                     # [batch, 128, 200]
+        x = self.merge(x)                 
 
         # channel attention: which channels matter most
-        x = self.channel_attention(x)         # [batch, 128, 200]
+        x = self.channel_attention(x)        
 
         # temporal attention: which time steps matter most
-        weights = self.attention(x)           # [batch, 1,   200]
-        x = (x * weights).sum(dim=2)         # [batch, 128]
+        weights = self.attention(x)          
+        x = (x * weights).sum(dim=2)       
 
         # classify
         x = self.dropout(x)
-        x = self.fc1(x)                       # [batch, 64]
+        x = self.fc1(x)                     
         x = self.relu(x)
-        x = self.fc2(x)                       # [batch, 18]
+        x = self.fc2(x)                    
 
         return x
 

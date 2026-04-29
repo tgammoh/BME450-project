@@ -14,8 +14,8 @@ from data_loader import NinaProLoader
 from config import WINDOW_SIZE, TRAIN_REPS, PURITY_THRESHOLD, NUM_CLASSES
 
 
-# ─── config ─────────────────────────────────────────
-MODEL_PATH = 'best_model.pth'
+
+MODEL_PATH = 'best_model.pth'  
 USE_V2     = False
 DATA_DIR   = os.path.join('..', 'data', 'test')
 
@@ -42,7 +42,7 @@ GESTURE_NAMES = {
 }
 
 
-# ─── hand drawing logic ─────────────────────────────
+
 def get_finger_states(gesture_class):
     state = {
         'thumb': False, 'index': False, 'middle': False,
@@ -119,7 +119,7 @@ def draw_hand(ax, gesture_class, label, is_correct=None):
                  fontsize=11, pad=10)
 
 
-# ─── choose subject interactively ───────────────────
+
 def classify_subject_type(filename):
     """Guess subject type from filename conventions."""
     fname = filename.lower()
@@ -186,7 +186,6 @@ def choose_subject():
     return full_path, subject_type, chosen_file
 
 
-# ─── run visualisation ──────────────────────────────
 def run_visualisation():
     file_path, subject_type, filename = choose_subject()
 
@@ -295,7 +294,7 @@ def run_visualisation():
     plt.tight_layout()
     plt.show()
 
-    # ─── final analysis ─────────────────────────────
+   
     print('\n\n' + '='*50)
     print('         FINAL ANALYSIS')
     print('='*50)

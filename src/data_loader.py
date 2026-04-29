@@ -92,8 +92,7 @@ class NinaProLoader:
         self.emg_std = train_emg.std(axis = 0)                 # shape: [12]
         
 
-        #print(f'Mean per channel: {self.emg_mean}')   
-        #print(f'Std per channel:  {self.emg_std}\n')  
+        
 
         # then we apply to the entire signal (train + test)
         self.emg = (self.emg - self.emg_mean) / (self.emg_std + 1e-8)   # shape: [time_samples x 12]
@@ -105,10 +104,6 @@ class NinaProLoader:
 
         print('Data normalised using training repetitions only.\n')
 
-        self.acc = self.data.get('acc')
-        print(f'EMG shape: {self.emg.shape}')
-        print(f'ACC shape: {self.acc.shape}')
-        # we only use the data of the train to calculate specs because we want to treat the test sample as if its in real time.
         
 
           
@@ -134,14 +129,13 @@ class NinaProLoader:
                 continue
 
             """
-           rep 0    → samples recorded between trials, when no repetition 
-           was active. These have no meaningful structure.
-           → I excluded these entirely from windowing.
+           rep 0 samples recorded between trials, when no repetition 
+           was active. These have no meaningful structure, so
+           I excluded these entirely from windowing.
 
-           label 0  → rest periods WITHIN a repetition, when the subject 
+           label 0 rest periods within a repetition, when the subject 
            was sitting still between movements but the recording 
-           was still part of an active trial.
-           → these are still in my data.
+           was still part of an active trial, these are still in my data.
 
             """
 
@@ -195,6 +189,23 @@ class NinaProLoader:
         return class_weights
 
 
+    """
+    I found that there is a majority class problem in the dataset,
+    where the rest class dominates the windows by a large margin.
+
+    To fix this, we have to implement class weights in the loss function, so that the model
+    does not predict rest to increase accuracy.
+    Using this formula:
+    weight for class i = total_samples / (num_classes * count_of_class_i)
+
+    using compute_class_weights (), the model will be penalised 17X more
+    for getting the rare classes wrong, and we are forcing the model to learn
+    rather than just ignoring these rare classes.
+
+    """  
+
+
+
 def load_multiple_subjects(file_paths, train_reps=TRAIN_REPS, purity_threshold=PURITY_THRESHOLD):
 
     all_X_train, all_y_train = [], []
@@ -230,19 +241,6 @@ def load_multiple_subjects(file_paths, train_reps=TRAIN_REPS, purity_threshold=P
 
 
 
-"""
-I found that there is a majority class problem in the dataset,
-where the rest class dominates the windows by a large margin.
-
-To fix this, we have to implement class weights in the loss function, so that the model
-does not predict rest to increase accuracy.
-Using this formula:
-weight for class i = total_samples / (num_classes * count_of_class_i)
-
-using compute_class_weights (), the model will be penalised 17X more
-for getting the rare classes wrong, and we are forcing the model to learn
-rather than just ignoring these rare classes.
-"""  
 
 
 
@@ -269,18 +267,3 @@ if __name__ == '__main__':
 
     
 
-    
-
-"""
-Just for debugging 
-print(f'Sample batch:')
-    print(f'X_batch shape: {X_batch.shape}')   # expect [32, 200, 12]
-    print(f'y_batch shape: {y_batch.shape}')   # expect [32]
-    print(f'y_batch values: {y_batch[:8]}')
-    print('Class distribution in training set:')
-
-
-       #print(f'After normalisation:')
-    print(f'EMG mean: {loader.emg.mean():.4f}')   # should be ~0
-    print(f'EMG std:  {loader.emg.std():.4f}')    # should be ~1
-"""

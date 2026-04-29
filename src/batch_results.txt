@@ -1,0 +1,40 @@
+Results of test_subjects.py
+
+Batch evaluation results
+Model: simple
+Files processed: 5
+Device: cuda
+
+File                            Windows   Overall  MeanClass
+----------------------------------------------------------------------
+S11_amputee_90%_cancer.mat        21527    89.58%     94.86%
+S1_apmutee_50%.mat                22269    94.62%     95.74%
+S6_trained_able_bodied.mat        22027    90.79%     94.60%
+S7_not_trained_able_bodied.mat    22122    24.14%     24.48%
+S9_amputee_90%_accident.mat       21497    14.27%     13.23%
+----------------------------------------------------------------------
+AVERAGE                                    62.68%     64.58%
+
+
+Per-class accuracy per subject:
+
+Class                                   S11       S1       S6     S7 [unseen] S9 [unseen]
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ 0 (Rest                        )       74.8%     83.6%     72.0%     42.5%     33.5%
+ 1 (Thumb up                    )       99.3%    100.0%    100.0%     26.2%      0.0%
+ 2 (Index + middle extended     )       95.8%     93.9%     97.2%      0.6%      0.0%
+ 3 (Ring + little flexed        )       97.1%     99.8%     94.3%      3.5%      1.8%
+ 4 (Thumb opposing              )       93.1%     96.7%     94.7%     55.9%      0.9%
+ 5 (Fingers flexed together     )       94.0%     98.9%     99.2%     35.5%      0.0%
+ 6 (Fist                        )       98.5%     97.3%     99.2%     54.3%      0.0%
+ 7 (Pointing index              )       83.9%    100.0%     90.9%      0.0%      4.7%
+ 8 (Adducted fingers            )       89.8%     86.2%     99.8%      0.0%      4.4%
+ 9 (Wrist supination (mid)      )       97.9%    100.0%     94.3%     64.1%      1.1%
+10 (Wrist pronation (mid)       )       99.7%     98.9%     99.8%      2.0%     28.3%
+11 (Wrist supination (little)   )       97.5%     94.4%     92.8%     30.1%     17.7%
+12 (Wrist pronation (little)    )       96.2%     99.5%     97.9%      8.7%     28.1%
+13 (Wrist flexion               )       98.5%     83.7%     86.8%      3.1%     13.8%
+14 (Wrist extension             )       98.6%     99.8%     94.4%     20.1%      0.5%
+15 (Wrist radial deviation      )       99.2%     97.6%     99.4%      3.5%      5.6%
+16 (Wrist ulnar deviation       )       99.1%     93.7%     93.8%     67.0%      0.0%
+17 (Wrist extended + fist       )       94.5%     99.3%     96.4%     23.4%     97.5%
